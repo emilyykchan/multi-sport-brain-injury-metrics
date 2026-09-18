@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-damage = ["dynasaur==1.3.53", "scipy>=1.11"]
+damage = ["dynasaur==1.3.53", "numpy<2", "scipy<=1.13.1"]
 dev = ["pytest>=8", "ruff>=0.6"]
 
 [tool.setuptools.packages.find]

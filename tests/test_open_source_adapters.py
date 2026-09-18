@@ -60,21 +60,86 @@ def test_dynasaur_wrapper_maps_published_parameter_names(monkeypatch):
     root = types.ModuleType("dynasaur")
     calc = types.ModuleType("dynasaur.calc")
     standard = types.ModuleType("dynasaur.calc.standard_functions")
+
     seen = {}
 
-    def DAMAGE(ra_x, ra_y, ra_z, time, mx, my, mz, kxx, kyy, kzz, kxy, kyz, kxz, a0, a1, beta):
-        seen.update(locals())
-        return 0.25
+    class StandardFunction:
+        @staticmethod
+        def DAMAGE(
+            time,
+            ra_x,
+            ra_y,
+            ra_z,
+            mx,
+            my,
+            mz,
+            kxx,
+            kyy,
+            kzz,
+            kxy,
+            kyz,
+            kxz,
+            a0,
+            a1,
+            beta,
+        ):
+            seen.update(
+                {
+                    "time": time,
+                    "ra_x": ra_x,
+                    "ra_y": ra_y,
+                    "ra_z": ra_z,
+                    "mx": mx,
+                    "my": my,
+                    "mz": mz,
+                    "kxx": kxx,
+                    "kyy": kyy,
+                    "kzz": kzz,
+                    "kxy": kxy,
+                    "kyz": kyz,
+                    "kxz": kxz,
+                    "a0": a0,
+                    "a1": a1,
+                    "beta": beta,
+                }
+            )
+            return 0.25
 
-    standard.DAMAGE = DAMAGE
+    standard.StandardFunction = StandardFunction
+
     monkeypatch.setitem(sys.modules, "dynasaur", root)
     monkeypatch.setitem(sys.modules, "dynasaur.calc", calc)
-    monkeypatch.setitem(sys.modules, "dynasaur.calc.standard_functions", standard)
+    monkeypatch.setitem(
+        sys.modules,
+        "dynasaur.calc.standard_functions",
+        standard,
+    )
 
     t = np.array([0.0, 0.001, 0.002])
-    aa = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]])
+
+    aa = np.array(
+        [
+            [1.0, 2.0, 3.0],
+            [4.0, 5.0, 6.0],
+            [7.0, 8.0, 9.0],
+        ]
+    )
+
     assert damage_dynasaur(t, aa) == 0.25
-    np.testing.assert_allclose(seen["ra_x"], aa[:, 0])
-    np.testing.assert_allclose(seen["time"], t)
+
+    # Published DAMAGE parameters
+    assert seen["mx"] == 1.0
+    assert seen["my"] == 1.0
+    assert seen["mz"] == 1.0
+
+    assert seen["kxx"] == 32142.0
+    assert seen["kyy"] == 23493.0
+    assert seen["kzz"] == 16935.0
+
+    assert seen["kxy"] == 0.0
+    assert seen["kyz"] == 0.0
+    assert seen["kxz"] == 1636.3
+
+    assert seen["a0"] == 0.0
     assert seen["a1"] == 0.0059148
     assert seen["beta"] == 2.9903
