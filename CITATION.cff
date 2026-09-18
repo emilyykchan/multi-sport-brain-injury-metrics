@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the associated manuscript and the original metric/software sources."
+title: "Sports brain injury metric calculations"
+type: software
+authors:
+  - family-names: Chan
+    given-names: Emily Yik Kwan
+version: 0.1.0
+date-released: 2026-09-18
+references:
+  - type: article
+    title: "Development of a Metric for Predicting Brain Strain Responses Using Head Kinematics"
+    authors:
+      - family-names: Gabler
+        given-names: Lee F.
+      - family-names: Crandall
+        given-names: Jeff R.
+      - family-names: Panzer
+        given-names: Matthew B.
+    journal: "Annals of Biomedical Engineering"
+    year: 2018
+    volume: 46
+    start: 972
+    end: 985
+    doi: "10.1007/s10439-018-2015-9"
+  - type: software
+    title: "Dynasaur"
+    publisher: "Vehicle Safety Institute, Graz University of Technology"
+    url: "https://gitlab.com/VSI-TUGraz/Dynasaur"
+  - type: software
+    title: "dynars"
+    version: "1.1.0"
+    url: "https://pypi.org/project/dynars/"
