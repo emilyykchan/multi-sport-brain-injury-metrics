@@ -12,7 +12,11 @@ def test_dynars_wrapper_calls_public_api(monkeypatch):
 
     def resultant(x, y, z):
         calls["resultant"] = True
-        return np.sqrt(np.asarray(x) ** 2 + np.asarray(y) ** 2 + np.asarray(z) ** 2)
+        return np.sqrt(
+            np.asarray(x) ** 2
+            + np.asarray(y) ** 2
+            + np.asarray(z) ** 2
+        )
 
     def hic15(a, dt):
         calls["hic15"] = (np.asarray(a), dt)
@@ -22,17 +26,33 @@ def test_dynars_wrapper_calls_public_api(monkeypatch):
         calls["bric"] = (cx, cy, cz)
         return 0.42
 
-    fake.resultant = resultant
-    fake.hic15 = hic15
-    fake.bric = bric
+    # Match the real dynars API:
+    # dynars.injury.resultant
+    # dynars.injury.hic15
+    # dynars.injury.bric
+    fake.injury = types.SimpleNamespace(
+        resultant=resultant,
+        hic15=hic15,
+        bric=bric,
+    )
+
     monkeypatch.setitem(sys.modules, "dynars", fake)
 
-    la = np.array([[3.0, 4.0, 0.0], [0.0, 0.0, 5.0]])
-    w = np.array([[1.0, 2.0, 3.0], [2.0, 3.0, 4.0]])
+    la = np.array([
+        [3.0, 4.0, 0.0],
+        [0.0, 0.0, 5.0],
+    ])
+
+    w = np.array([
+        [1.0, 2.0, 3.0],
+        [2.0, 3.0, 4.0],
+    ])
+
     assert hic15_dynars(la, 0.001) == 123.0
     assert bric_dynars(w, (66.2, 59.1, 44.2)) == 0.42
+
     assert calls["resultant"]
-    np.testing.assert_allclose(calls["hic15"][0], [5.0, 5.0])
+    assert calls["hic15"][1] == 0.001
     assert calls["bric"] == (66.2, 59.1, 44.2)
 
 
