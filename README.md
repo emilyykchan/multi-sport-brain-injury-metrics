@@ -7,18 +7,16 @@ The repository contains the metric calculations only. Kinematic filtering/prepro
 
 ## Metrics
 
-| Metric | Implementation |
-|---|---|
-| PLA | Peak resultant linear acceleration calculated from the three linear-acceleration components |
-| PRA | Peak resultant rotational acceleration calculated from the three rotational-acceleration components |
-| PRV | Peak resultant rotational velocity calculated from the three rotational-velocity components |
-| HIC15 | Open-source [`dynars`](https://pypi.org/project/dynars/) implementation |
-| BrIC | Open-source `dynars` implementation with explicitly specified critical angular velocities |
-| UBrIC | Gabler et al. (2018) peak-to-peak angular-velocity formulation implemented in this repository |
-| DAMAGE | Open-source [`Dynasaur`](https://gitlab.com/VSI-TUGraz/Dynasaur) implementation using published model parameters |
-| HARM | Published linear combination of HIC15 and DAMAGE |
-
-The XGB-based metric used in the associated study will be added using the original trained model artefact and its exact feature-extraction pipeline; it is not reconstructed from manuscript text.
+| Metric | Definition | Implementation in this repository | Reference |
+|---|---|---|---|
+| **PLA** Peak Linear Acceleration | Maximum of the resultant linear-acceleration time history: `max √(ax² + ay² + az²)`. Units: g. | Calculated directly from `LinAccX`, `LinAccY` and `LinAccZ`. The exported resultant channel is used only for QC. | Conventional head-kinematic measure; Hernandez et al. (2015), DOI: [10.1007/s10439-014-1212-4](https://doi.org/10.1007/s10439-014-1212-4). |
+| **PRA** Peak Rotational Acceleration | Maximum of the resultant rotational-acceleration time history: `max √(αx² + αy² + αz²)`. Units: rad/s². | Calculated directly from `RotAccX`, `RotAccY` and `RotAccZ`. | Conventional head-kinematic measure; Hernandez et al. (2015), DOI: [10.1007/s10439-014-1212-4](https://doi.org/10.1007/s10439-014-1212-4). |
+| **PRV** Peak Rotational Velocity | Maximum of the resultant rotational-velocity time history: `max √(ωx² + ωy² + ωz²)`. Units: rad/s. | Calculated directly from `RotVelX`, `RotVelY` and `RotVelZ`. | Conventional head-kinematic measure; Hernandez et al. (2015), DOI: [10.1007/s10439-014-1212-4](https://doi.org/10.1007/s10439-014-1212-4). |
+| **HIC15** Head Injury Criterion | Maximum HIC calculated from resultant linear acceleration over all candidate intervals with `t2 − t1 ≤ 15 ms`: `(t2−t1) × [mean acceleration over (t1,t2)]^2.5`. Acceleration is expressed in g. | Calculated using [`dynars==1.1.0`](https://docs.rs/dynars/latest/dynars/results/injury/index.html), which searches candidate windows up to 15 ms. | HIC15 is formally defined in NHTSA crashworthiness standards; it is also commonly used in head-impact biomechanics. See Hernandez et al. (2015), DOI: [10.1007/s10439-014-1212-4](https://doi.org/10.1007/s10439-014-1212-4). |
+| **BrIC** Brain Injury Criterion | Direction-dependent combination of peak absolute angular velocities: `BrIC = √[(ωx/ωxc)² + (ωy/ωyc)² + (ωz/ωzc)²]`. | Calculated using [`dynars==1.1.0`](https://docs.rs/dynars/latest/dynars/results/injury/index.html), with the critical values CSDM-derived values `(66.2, 59.1, 44.2) rad/s`. The averaged CSDM/MPS values `(66.25, 56.45, 42.87) rad/s` are also retained in `constants.py` for selection. | Takhounts et al. (2013), DOI: [10.4271/2013-22-0010](https://doi.org/10.4271/2013-22-0010). The `(66.2, 59.1, 44.2)` set is also used by Hernandez et al. (2015), DOI: [10.1007/s10439-014-1212-4](https://doi.org/10.1007/s10439-014-1212-4). |
+| **UBrIC** Universal Brain Injury Criterion | Combines direction-dependent rotational velocity and acceleration. For each axis, rotational velocity is defined as peak-to-peak, `ωp2p = max(ω) − min(ω)`, and rotational acceleration as `max \|α\|`. The MPS-calibrated critical values used here are `ωcr = (211, 171, 115) rad/s`, `αcr = (20.0, 10.3, 7.76) krad/s²`, with `r = 2`. | Implemented directly in this repository from the published Gabler et al. formulation.| Gabler, Crandall & Panzer (2018), *Development of a Metric for Predicting Brain Strain Responses Using Head Kinematics*, *Annals of Biomedical Engineering* 46:972–985, DOI: [10.1007/s10439-018-2015-9](https://doi.org/10.1007/s10439-018-2015-9). |
+| **DAMAGE** Diffuse Axonal Multi-Axis General Evaluation | A coupled three-degree-of-freedom second-order system driven by the three rotational-acceleration time histories. DAMAGE is the scaled maximum resultant deformation of the system and was developed as a rapid estimator of maximum brain strain. | Calculated using the open-source [`Dynasaur==1.3.53`](https://gitlab.com/VSI-TUGraz/Dynasaur) `StandardFunction.DAMAGE` implementation. Published model parameters are passed explicitly from `damage.py`; no parameters are fitted or recalibrated to the present dataset. | Gabler, Crandall & Panzer (2019), *Development of a Second-Order System for Rapid Estimation of Maximum Brain Strain*, *Annals of Biomedical Engineering* 47:1971–1981, DOI: [10.1007/s10439-018-02179-9](https://doi.org/10.1007/s10439-018-02179-9). |
+| **HARM** Head Acceleration Response Metric | Linear combination of translational- and rotational-motion criteria: `HARM = 0.0148 × HIC15 + 15.6 × DAMAGE`. | Calculated directly in this repository from the HIC15 and DAMAGE values above. | Bailey et al. (2020), *Development and Evaluation of a Test Method for Assessing the Performance of American Football Helmets*, *Annals of Biomedical Engineering* 48:2566–2579, DOI: [10.1007/s10439-020-02626-6](https://doi.org/10.1007/s10439-020-02626-6). |
 
 ## Input format
 
@@ -31,7 +29,7 @@ RotAccX  RotAccY  RotAccZ  RotAccRes
 t(ms)
 ```
 
-Units are:
+Units:
 
 - linear acceleration: g
 - rotational velocity: rad/s
@@ -71,62 +69,6 @@ The output workbook contains:
 - `resultant_qc`: comparison of exported and recomputed resultant traces;
 - `errors`: files that could not be processed, if any.
 
-## Metric definitions
-
-### PLA, PRA and PRV
-
-For a three-component kinematic signal \(q=(q_x,q_y,q_z)\), the resultant is
-
-\[
-q_r(t)=\sqrt{q_x(t)^2+q_y(t)^2+q_z(t)^2}.
-\]
-
-PLA, PRA and PRV are the maxima of the corresponding resultant time histories.
-
-### HIC15
-
-HIC15 is calculated with `dynars.hic15`, which maximises HIC over candidate time windows no longer than 15 ms.
-
-### BrIC
-
-BrIC is calculated with `dynars.bric`. The critical angular velocities are passed explicitly in `constants.py` so that the selected calibration is transparent.
-
-The default values are the CSDM-derived critical velocities from Takhounts et al. (2013):
-
-```text
-(66.2, 59.1, 44.2) rad/s
-```
-
-The averaged CSDM/MPS values are also provided in `constants.py` for explicit selection when required.
-
-### UBrIC
-
-UBrIC follows Gabler, Crandall & Panzer (2018), using peak-to-peak angular velocity for each axis:
-
-\[
-\omega_{p2p,i}=\max(\omega_i)-\min(\omega_i)
-\]
-
-and peak absolute angular acceleration. The MPS-calibrated critical values used are:
-
-```text
-omega_critical = (211, 171, 115) rad/s
-alpha_critical = (20000, 10300, 7760) rad/s²
-r = 2
-```
-
-### DAMAGE
-
-DAMAGE is calculated by calling the public Dynasaur implementation with the published model parameters defined in `damage.py`. No DAMAGE model is refitted to the input dataset.
-
-### HARM
-
-HARM is calculated as
-
-\[
-HARM = 0.0148\,HIC15 + 15.6\,DAMAGE.
-\]
-
 ## Tests
 
 ```bash
@@ -141,7 +83,17 @@ No instrumented-mouthguard data are included in this repository. The code can th
 
 ## References
 
-- Gabler LF, Crandall JR, Panzer MB. Development of a Metric for Predicting Brain Strain Responses Using Head Kinematics. *Annals of Biomedical Engineering*. 2018;46:972–985. doi:10.1007/s10439-018-2015-9.
-- Takhounts EG, et al. Development of Brain Injury Criteria (BrIC). *Stapp Car Crash Journal*. 2013.
-- Dynasaur, Vehicle Safety Institute, Graz University of Technology: https://gitlab.com/VSI-TUGraz/Dynasaur
-- dynars: https://pypi.org/project/dynars/
+1. Hernandez F, Wu LC, Yip MC, et al. Six Degree-of-Freedom Measurements of Human Mild Traumatic Brain Injury. *Annals of Biomedical Engineering*. 2015;43(8):1918–1934. doi: 10.1007/s10439-014-1212-4.
+
+2. Takhounts EG, Craig MJ, Moorhouse K, McFadden J, Hasija V. Development of Brain Injury Criteria (BrIC). *Stapp Car Crash Journal*. 2013;57:243–266. doi: 10.4271/2013-22-0010.
+
+3. Gabler LF, Crandall JR, Panzer MB. Development of a Metric for Predicting Brain Strain Responses Using Head Kinematics. *Annals of Biomedical Engineering*. 2018;46(7):972–985. doi: 10.1007/s10439-018-2015-9.
+
+4. Gabler LF, Crandall JR, Panzer MB. Development of a Second-Order System for Rapid Estimation of Maximum Brain Strain. *Annals of Biomedical Engineering*. 2019;47(9):1971–1981. doi: 10.1007/s10439-018-02179-9.
+
+5. Bailey AM, Sanchez EJ, Park G, et al. Development and Evaluation of a Test Method for Assessing the Performance of American Football Helmets. *Annals of Biomedical Engineering*. 2020;48(11):2566–2579. doi: 10.1007/s10439-020-02626-6.
+
+### Software
+
+- **dynars 1.1.0**: open-source injury-criterion implementation used here for HIC15 and BrIC.
+- **Dynasaur 1.3.53**: open-source post-processing library developed by TU Graz; `StandardFunction.DAMAGE` is used here for DAMAGE.
