@@ -4,6 +4,7 @@ Python code for calculating brain injury metrics from instrumented-mouthguard he
 
 The repository contains the metric calculations only. Kinematic filtering/preprocessing is performed upstream and is not repeated here.
 
+
 ## Metrics
 
 | Metric | Implementation |
@@ -59,8 +60,8 @@ For a folder containing one `.xlsx` file per impact:
 
 ```bash
 python scripts/calculate_metrics.py \
-  --input-dir /path/to/impact_folder \
-  --output results/injury_metrics.xlsx \
+  --input-dir test_impacts \
+  --output results/test_impacts_metrics.xlsx \
   --damage-backend dynasaur
 ```
 

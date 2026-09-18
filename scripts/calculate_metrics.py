@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+from tqdm import tqdm
 
 import argparse
 from pathlib import Path
 import sys
 
 import pandas as pd
+
 
 # Allows running directly from a source checkout without installation.
 ROOT = Path(__file__).resolve().parents[1]
@@ -57,7 +59,11 @@ def main() -> None:
     qc_rows: list[dict] = []
     errors: list[dict] = []
 
-    for path in files:
+    for path in tqdm(
+        files,
+        desc="Calculating injury metrics",
+        unit="impact",
+    ):
         try:
             kin = read_impact(path, cmap)
             result = compute_metrics(kin, damage_backend=backend)
